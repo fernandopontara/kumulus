@@ -1,24 +1,42 @@
+package main
+
 import (
-	"net/http"
+	"kumulus/internal/config"
 	"kumulus/internal/handler"
 	"kumulus/internal/middleware"
-	"kumulus/internal/config"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	// Carrega as variáveis de ambiente
+	config.LoadEnv()
 
-	chatHandler := handler.ChatHandler{ /* injeções */ }
+	// Inicializa os repositórios e serviços necessários
+	userRepo := config.InitializeUserRepo()                 // Certifique-se de implementar esta função
+	chatService := config.InitializeChatService()           // Certifique-se de implementar esta função
+	knowledgeService := config.InitializeKnowledgeService() // Certifique-se de implementar esta função
 
-	mux.Handle("/chat", middleware.ApplyMiddlewares(http.HandlerFunc(chatHandler.Chat)))
+	// Inicializa os handlers com as dependências
+	authHandler := handler.AuthHandler{UserRepo: userRepo}
+	chatHandler := handler.ChatHandler{ChatService: chatService}
+	knowledgeHandler := handler.KnowledgeHandler{Service: knowledgeService}
 
-	http.ListenAndServe(":8080", mux)
-}
+	// Configura o roteador do Gin
+	r := gin.Default()
+	r.Use(middleware.CORSMiddleware()) // Aplica globalmente o middleware de CORS
 
-func NewClient() *Client {
-	return &Client{
-		APIKey:      config.GetEnv("OPENAI_API_KEY", ""),
-		Model:       "gpt-3.5-turbo",
-		Temperature: 0.7,
+	// Rota pública para login
+	r.POST("/login", authHandler.LoginHandler)
+
+	// Grupo protegido com autenticação multitenant
+	auth := r.Group("/")
+	auth.Use(middleware.GinAuthMiddleware())
+	{
+		auth.POST("/chat", chatHandler.HandleChat)
+		auth.POST("/knowledge", knowledgeHandler.HandleKnowledge)
 	}
+
+	// Inicia o servidor na porta 8080
+	r.Run(":8080")
 }

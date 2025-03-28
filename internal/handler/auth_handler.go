@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"kumulus/internal/auth"
 	"kumulus/internal/repository"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
@@ -20,24 +21,24 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Requisição inválida", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "dados inválidos"})
 		return
 	}
 
 	user, err := h.UserRepo.FindByEmail(req.Email)
 	if err != nil || !auth.VerifyPassword(user.PasswordHash, req.Password) {
-		http.Error(w, "Credenciais inválidas", http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "credenciais inválidas"})
 		return
 	}
 
 	token, err := auth.GenerateToken(user.ID, user.OrganizationID, user.Role)
 	if err != nil {
-		http.Error(w, "Erro ao gerar token", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao gerar token"})
 		return
 	}
 
-	json.NewEncoder(w).Encode(LoginResponse{Token: token})
+	c.JSON(http.StatusOK, LoginResponse{Token: token})
 }

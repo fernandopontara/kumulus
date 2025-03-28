@@ -1,11 +1,10 @@
 package middleware
 
-import "net/http"
+import "github.com/gin-gonic/gin"
 
-// Aplica todos os middlewares em ordem
-func ApplyMiddlewares(handler http.Handler) http.Handler {
-	handler = CORSMiddleware(handler)
-	handler = LoggingMiddleware(handler)
-	handler = AuthMiddleware(handler)
-	return handler
+func ApplyAll() []gin.HandlerFunc {
+	return []gin.HandlerFunc{
+		CORSMiddleware(),
+		GinAuthMiddleware(),
+	}
 }
