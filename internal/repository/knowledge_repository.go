@@ -1,3 +1,14 @@
+package repository
+
+import (
+	"database/sql"
+	"kumulus/internal/model"
+)
+
+type KnowledgeRepository struct {
+	DB *sql.DB
+}
+
 func (r *KnowledgeRepository) BuscarContextos(orgID, userID, role string, embedding []float32) ([]model.KnowledgeBaseEntry, error) {
 	query := `
 	SELECT * FROM knowledge_base_entries

@@ -1,4 +1,4 @@
-module github.com/fernandopontara/kumulus
+module kumulus
 
 go 1.23.0
 
@@ -38,5 +38,3 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/golang-migrate/migrate/v4 => github.com/golang-migrate/migrate/v4 v4.18.2

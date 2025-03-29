@@ -1,3 +1,16 @@
+package Service
+
+import (
+	"fmt"
+	"strings"
+)
+
+// ChatService represents the service with dependencies.
+type ChatService struct {
+	Embedder Embedder
+	Repo     Repository
+}
+
 func (s *ChatService) MontarPrompt(orgID, userID, role, pergunta string) (string, error) {
 	embedding, err := s.Embedder.Generate(pergunta)
 	if err != nil {
